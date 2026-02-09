@@ -52,7 +52,8 @@ func (r *Reader) Read(p []byte) (n int, err error) {
 // io.EOF is returned at the end of the input.
 func (r *Reader) Next() (*Header, error) {
 	if r.hdr == nil {
-		return r.next()
+		hdr, _, err := r.next()
+		return hdr, err
 	}
 	skp := r.eof + r.hdr.pad
 	if skp > 0 {
@@ -61,16 +62,33 @@ func (r *Reader) Next() (*Header, error) {
 			return nil, err
 		}
 	}
+	hdr, _, err := r.next()
+	return hdr, err
+}
+
+// NextRaw is like Next, but it additionally returns the RawHeader, which
+// contains the raw bytes of the header as read from the input.
+func (r *Reader) NextRaw() (*Header, *RawHeader, error) {
+	if r.hdr == nil {
+		return r.next()
+	}
+	skp := r.eof + r.hdr.pad
+	if skp > 0 {
+		_, err := io.CopyN(io.Discard, r.r, skp)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
 	return r.next()
 }
 
-func (r *Reader) next() (*Header, error) {
+func (r *Reader) next() (*Header, *RawHeader, error) {
 	r.eof = 0
-	hdr, err := readSVR4Header(r.r)
+	hdr, raw, err := readSVR4Header(r.r)
 	if err != nil {
-		return nil, err
+		return hdr, raw, err
 	}
 	r.hdr = hdr
 	r.eof = hdr.Size
-	return hdr, nil
+	return hdr, raw, nil
 }

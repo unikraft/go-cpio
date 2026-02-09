@@ -31,23 +31,29 @@ func writeHex(b []byte, i int64) {
 	copy(b, fmt.Sprintf("%08X", i))
 }
 
-func readSVR4Header(r io.Reader) (*Header, error) {
-	var buf [110]byte
+func readSVR4Header(r io.Reader) (*Header, *RawHeader, error) {
+	var savedBuf RawHeader
+	var buf RawHeader
 	if _, err := io.ReadFull(r, buf[:]); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// TODO: check endianness
 
+	// copy buffer to saved buffer
+	// NOTE(craciunoiuc): We do this as 'buf' is changed in the loop below
+	// we back up the original buffer to return it in case of raw parsing
+	copy(savedBuf[:], buf[:])
+
 	// check magic
 	hasCRC := false
 	if !bytes.HasPrefix(buf[:], svr4Magic[:5]) {
-		return nil, ErrHeader
+		return nil, nil, ErrHeader
 	}
 	if buf[5] == '2' {
 		hasCRC = true
 	} else if buf[5] != '1' {
-		return nil, ErrHeader
+		return nil, nil, ErrHeader
 	}
 
 	asc := string(buf[:])
@@ -61,24 +67,24 @@ func readSVR4Header(r io.Reader) (*Header, error) {
 		Size:    readHex(asc[54:62]),
 	}
 	if hdr.Size > svr4MaxFileSize {
-		return nil, ErrHeader
+		return nil, nil, ErrHeader
 	}
 	nameSize := readHex(asc[94:102])
 	if nameSize < 1 || nameSize > svr4MaxNameSize {
-		return nil, ErrHeader
+		return nil, nil, ErrHeader
 	}
 	hdr.Checksum = uint32(readHex(asc[102:110]))
 	if !hasCRC && hdr.Checksum != 0 {
-		return nil, ErrHeader
+		return nil, nil, ErrHeader
 	}
 
 	name := make([]byte, nameSize)
 	if _, err := io.ReadFull(r, name); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	hdr.Name = string(name[:nameSize-1])
 	if hdr.Name == headerEOF {
-		return nil, io.EOF
+		return hdr, &savedBuf, io.EOF
 	}
 
 	// store padding between end of file and next header
@@ -86,26 +92,27 @@ func readSVR4Header(r io.Reader) (*Header, error) {
 
 	// skip to end of header/start of file
 	pad := (4 - (len(buf)+len(name))%4) % 4
+
 	if pad > 0 {
 		if _, err := io.ReadFull(r, buf[:pad]); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	// read link name
 	if hdr.Mode&^ModePerm == TypeSymlink {
 		if hdr.Size < 1 || hdr.Size > svr4MaxNameSize {
-			return nil, ErrHeader
+			return nil, nil, ErrHeader
 		}
 		b := make([]byte, hdr.Size)
 		if _, err := io.ReadFull(r, b); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		hdr.Linkname = string(b)
 		hdr.Size = 0
 	}
 
-	return hdr, nil
+	return hdr, &savedBuf, nil
 }
 
 func writeSVR4Header(w io.Writer, hdr *Header) (pad int64, err error) {

@@ -105,6 +105,14 @@ type Header struct {
 	pad int64 // bytes to pad before next header
 }
 
+// RawHeader exposes the unparsed header data.
+type RawHeader [110]byte
+
+// Bytes returns the header as a byte slice.
+func (rh *RawHeader) Bytes() []byte {
+	return rh[:]
+}
+
 // FileInfo returns an fs.FileInfo for the Header.
 func (h *Header) FileInfo() os.FileInfo {
 	return fileInfo{h}
