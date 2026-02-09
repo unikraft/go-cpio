@@ -12,22 +12,38 @@ import (
 	"time"
 )
 
-// Mode constants from the cpio spec.
-// TODO: rename to Type
 const (
-	ModeSetuid     = 0o04000   // Set uid
-	ModeSetgid     = 0o02000   // Set gid
-	ModeSticky     = 0o01000   // Save text (sticky bit)
-	ModeDir        = 0o040000  // Directory
-	ModeNamedPipe  = 0o010000  // FIFO
-	ModeRegular    = 0o0100000 // Regular file
-	ModeSymlink    = 0o0120000 // Symbolic link
-	ModeDevice     = 0o060000  // Block special file
-	ModeCharDevice = 0o020000  // Character special file
-	ModeSocket     = 0o0140000 // Socket
+	// TypeRegular indicates a regular file
+	TypeRegular = 0o100000
 
-	ModeType = 0o0170000 // Mask for the type bits
-	ModePerm = 0o0777    // Unix permission bits
+	// The following are header-only flags and may not have a data body.
+	TypeSocket     = 0o140000 // Socket
+	TypeSymlink    = 0o120000 // Symbolic link
+	TypeDevice     = 0o60000  // Block device node
+	TypeDir        = 0o40000  // Directory
+	TypeCharDevice = 0o20000  // Character device node
+	TypeNamedPipe  = 0o10000  // FIFO node
+)
+
+const (
+	ModeSetuid = 0o4000 // Set uid
+	ModeSetgid = 0o2000 // Set gid
+	ModeSticky = 0o1000 // Save text (sticky bit)
+
+	ModeType = 0o170000 // Mask for the type bits
+	ModePerm = 0o777    // Unix permission bits
+)
+
+// Deprecated: these constants are provided for backward compatibility. Use the
+// Type* constants instead.
+const (
+	ModeDir        = TypeDir
+	ModeNamedPipe  = TypeNamedPipe
+	ModeRegular    = TypeRegular
+	ModeSymlink    = TypeSymlink
+	ModeDevice     = TypeDevice
+	ModeCharDevice = TypeCharDevice
+	ModeSocket     = TypeSocket
 )
 
 const (
@@ -46,15 +62,15 @@ func (m FileMode) String() string {
 }
 
 // IsDir reports whether m describes a directory. That is, it tests for the
-// ModeDir bit being set in m.
+// TypeDir bit being set in m.
 func (m FileMode) IsDir() bool {
-	return m&ModeDir != 0
+	return m&TypeDir != 0
 }
 
 // IsRegular reports whether m describes a regular file. That is, it tests for
-// the ModeRegular bit being set in m.
+// the TypeRegular bit being set in m.
 func (m FileMode) IsRegular() bool {
-	return m&^ModePerm == ModeRegular
+	return m&^ModePerm == TypeRegular
 }
 
 // Perm returns the Unix permission bits in m.
@@ -121,24 +137,24 @@ func FileInfoHeader(fi os.FileInfo, link string) (*Header, error) {
 	}
 	switch {
 	case fm.IsRegular():
-		h.Mode |= ModeRegular
+		h.Mode |= TypeRegular
 	case fi.IsDir():
-		h.Mode |= ModeDir
+		h.Mode |= TypeDir
 		h.Name += "/"
 		h.Size = 0
 	case fm&os.ModeSymlink != 0:
-		h.Mode |= ModeSymlink
+		h.Mode |= TypeSymlink
 		h.Linkname = link
 	case fm&os.ModeDevice != 0:
 		if fm&os.ModeCharDevice != 0 {
-			h.Mode |= ModeCharDevice
+			h.Mode |= TypeCharDevice
 		} else {
-			h.Mode |= ModeDevice
+			h.Mode |= TypeDevice
 		}
 	case fm&os.ModeNamedPipe != 0:
-		h.Mode |= ModeNamedPipe
+		h.Mode |= TypeNamedPipe
 	case fm&os.ModeSocket != 0:
-		h.Mode |= ModeSocket
+		h.Mode |= TypeSocket
 	default:
 		return nil, fmt.Errorf("cpio: unknown file mode %v", fm)
 	}

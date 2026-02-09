@@ -41,22 +41,22 @@ func (fi fileInfo) Mode() (mode os.FileMode) {
 		mode |= os.ModeSticky
 	}
 	m := os.FileMode(fi.h.Mode) & ModeType
-	if m == ModeDir {
+	if m == TypeDir {
 		mode |= os.ModeDir
 	}
-	if m == ModeNamedPipe {
+	if m == TypeNamedPipe {
 		mode |= os.ModeNamedPipe
 	}
-	if m == ModeSymlink {
+	if m == TypeSymlink {
 		mode |= os.ModeSymlink
 	}
-	if m == ModeDevice {
+	if m == TypeDevice {
 		mode |= os.ModeDevice
 	}
-	if m == ModeCharDevice {
+	if m == TypeCharDevice {
 		mode |= os.ModeDevice | os.ModeCharDevice
 	}
-	if m == ModeSocket {
+	if m == TypeSocket {
 		mode |= os.ModeSocket
 	}
 	return mode
