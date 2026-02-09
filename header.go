@@ -39,7 +39,7 @@ const (
 var ErrHeader = errors.New("cpio: invalid cpio header")
 
 // A FileMode represents a file's mode and permission bits.
-type FileMode int64
+type FileMode uint32
 
 func (m FileMode) String() string {
 	return fmt.Sprintf("%#o", m)
