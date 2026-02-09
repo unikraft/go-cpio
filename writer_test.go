@@ -11,7 +11,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cavaliergopher/cpio"
+	"github.com/unikraft/go-cpio"
 )
 
 func store(w *cpio.Writer, fn string) error {

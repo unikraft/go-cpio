@@ -12,7 +12,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/cavaliergopher/cpio"
+	"github.com/unikraft/go-cpio"
 )
 
 func Example() {

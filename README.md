@@ -1,5 +1,6 @@
 # cpio
-[![Go Reference](https://pkg.go.dev/badge/github.com/cavaliergopher/cpio.svg)](https://pkg.go.dev/github.com/cavaliergopher/cpio) [![Build Status](https://app.travis-ci.com/cavaliergopher/cpio.svg?branch=main)](https://app.travis-ci.com/cavaliergopher/cpio) [![Go Report Card](https://goreportcard.com/badge/github.com/cavaliergopher/cpio)](https://goreportcard.com/report/github.com/cavaliergopher/cpio)
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/unikraft/go-cpio.svg)](https://pkg.go.dev/github.com/unikraft/go-cpio) [![Build Status](https://app.travis-ci.com/unikraft/go-cpio.svg?branch=main)](https://app.travis-ci.com/unikraft/go-cpio) [![Go Report Card](https://goreportcard.com/badge/github.com/unikraft/go-cpio)](https://goreportcard.com/report/github.com/unikraft/go-cpio)
 
 Package cpio provides readers and writers for the CPIO archive file format.
 
