@@ -7,7 +7,6 @@ package cpio
 
 import (
 	"io"
-	"io/ioutil"
 )
 
 // Reader provides sequential access to the contents of a CPIO archive.
@@ -57,7 +56,7 @@ func (r *Reader) Next() (*Header, error) {
 	}
 	skp := r.eof + r.hdr.pad
 	if skp > 0 {
-		_, err := io.CopyN(ioutil.Discard, r.r, skp)
+		_, err := io.CopyN(io.Discard, r.r, skp)
 		if err != nil {
 			return nil, err
 		}

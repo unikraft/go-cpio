@@ -15,19 +15,19 @@ import (
 // Mode constants from the cpio spec.
 // TODO: rename to Type
 const (
-	ModeSetuid     = 04000   // Set uid
-	ModeSetgid     = 02000   // Set gid
-	ModeSticky     = 01000   // Save text (sticky bit)
-	ModeDir        = 040000  // Directory
-	ModeNamedPipe  = 010000  // FIFO
-	ModeRegular    = 0100000 // Regular file
-	ModeSymlink    = 0120000 // Symbolic link
-	ModeDevice     = 060000  // Block special file
-	ModeCharDevice = 020000  // Character special file
-	ModeSocket     = 0140000 // Socket
+	ModeSetuid     = 0o04000   // Set uid
+	ModeSetgid     = 0o02000   // Set gid
+	ModeSticky     = 0o01000   // Save text (sticky bit)
+	ModeDir        = 0o040000  // Directory
+	ModeNamedPipe  = 0o010000  // FIFO
+	ModeRegular    = 0o0100000 // Regular file
+	ModeSymlink    = 0o0120000 // Symbolic link
+	ModeDevice     = 0o060000  // Block special file
+	ModeCharDevice = 0o020000  // Character special file
+	ModeSocket     = 0o0140000 // Socket
 
-	ModeType = 0170000 // Mask for the type bits
-	ModePerm = 0777    // Unix permission bits
+	ModeType = 0o0170000 // Mask for the type bits
+	ModePerm = 0o0777    // Unix permission bits
 )
 
 const (
@@ -35,10 +35,8 @@ const (
 	headerEOF = "TRAILER!!!"
 )
 
-var (
-	// ErrHeader indicates there was an error decoding a CPIO header entry.
-	ErrHeader = errors.New("cpio: invalid cpio header")
-)
+// ErrHeader indicates there was an error decoding a CPIO header entry.
+var ErrHeader = errors.New("cpio: invalid cpio header")
 
 // A FileMode represents a file's mode and permission bits.
 type FileMode int64

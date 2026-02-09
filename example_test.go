@@ -23,7 +23,7 @@ func Example() {
 	w := cpio.NewWriter(buf)
 
 	// Add some files to the archive.
-	var files = []struct {
+	files := []struct {
 		Name, Body string
 	}{
 		{"readme.txt", "This archive contains some text files."},
@@ -33,7 +33,7 @@ func Example() {
 	for _, file := range files {
 		hdr := &cpio.Header{
 			Name: file.Name,
-			Mode: 0600,
+			Mode: 0o600,
 			Size: int64(len(file.Body)),
 		}
 		if err := w.WriteHeader(hdr); err != nil {
