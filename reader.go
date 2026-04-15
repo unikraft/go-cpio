@@ -6,7 +6,9 @@
 package cpio
 
 import (
+	"bytes"
 	"io"
+	"os"
 )
 
 // Reader provides sequential access to the contents of a CPIO archive.
@@ -91,4 +93,27 @@ func (r *Reader) next() (*Header, *RawHeader, error) {
 	r.hdr = hdr
 	r.eof = hdr.Size
 	return hdr, raw, nil
+}
+
+// IsValidPath reports whether path is an SVR4 CPIO archive by inspecting its
+// magic bytes.
+func IsValidPath(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	return IsValid(f)
+}
+
+// IsValid reports whether r is an SVR4 CPIO archive by inspecting its magic bytes.
+func IsValid(r io.Reader) bool {
+	var magic [6]byte
+	if _, err := io.ReadFull(r, magic[:]); err != nil {
+		return false
+	}
+
+	// Accept both 070701 (newc) and 070702 (newc + CRC)
+	return bytes.HasPrefix(magic[:5], svr4Magic[:5]) && (magic[5] == '1' || magic[5] == '2')
 }
