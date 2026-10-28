@@ -9,6 +9,9 @@ the SVR4 (New ASCII) format is supported, both with and without checksums.
 
 This package aims to be feel like Go's archive/tar package.
 
+OpenFS gives read-only access to the files of an archive through the io/fs
+interfaces, with owners, inodes, hard links, symbolic links and device nodes.
+
 See the CPIO man page: https://www.freebsd.org/cgi/man.cgi?query=cpio&sektion=5
 */
 package cpio

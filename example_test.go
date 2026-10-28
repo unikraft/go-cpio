@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 
@@ -78,5 +79,45 @@ func Example() {
 	// Geoffrey
 	// Gonzo
 	// Contents of todo.txt:
+	// Get animal handling license.
+}
+
+func ExampleOpenFS() {
+	// Open the cpio archive for reading.
+	f, err := os.Open("testdata/test_svr4.cpio")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer f.Close()
+
+	fsys, err := cpio.OpenFS(f)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Iterate through the files in the archive.
+	if err := fs.WalkDir(fsys, ".", func(name string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		fmt.Println(d.Type(), name)
+		return nil
+	}); err != nil {
+		log.Fatalln(err)
+	}
+
+	// Read a file through a symbolic link.
+	b, err := fs.ReadFile(fsys, "checklist.txt")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Printf("%s", b)
+
+	// Output:
+	// d--------- .
+	// L--------- checklist.txt
+	// ---------- gophers.txt
+	// ---------- readme.txt
+	// ---------- todo.txt
 	// Get animal handling license.
 }
