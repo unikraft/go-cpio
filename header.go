@@ -61,16 +61,16 @@ func (m FileMode) String() string {
 	return fmt.Sprintf("%#o", m)
 }
 
-// IsDir reports whether m describes a directory. That is, it tests for the
-// TypeDir bit being set in m.
+// IsDir reports whether m describes a directory. That is, it tests that the
+// type bits of m are TypeDir.
 func (m FileMode) IsDir() bool {
-	return m&TypeDir != 0
+	return m&ModeType == TypeDir
 }
 
-// IsRegular reports whether m describes a regular file. That is, it tests for
-// the TypeRegular bit being set in m.
+// IsRegular reports whether m describes a regular file. That is, it tests that
+// the type bits of m are TypeRegular.
 func (m FileMode) IsRegular() bool {
-	return m&^ModePerm == TypeRegular
+	return m&ModeType == TypeRegular
 }
 
 // Perm returns the Unix permission bits in m.
