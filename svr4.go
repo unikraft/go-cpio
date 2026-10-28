@@ -65,6 +65,11 @@ func readSVR4Header(r io.Reader) (*Header, *RawHeader, error) {
 		Links:   int(readHex(asc[38:46])),
 		ModTime: time.Unix(readHex(asc[46:54]), 0),
 		Size:    readHex(asc[54:62]),
+
+		DevMajor:  int(readHex(asc[62:70])),
+		DevMinor:  int(readHex(asc[70:78])),
+		RdevMajor: int(readHex(asc[78:86])),
+		RdevMinor: int(readHex(asc[86:94])),
 	}
 	if hdr.Size > svr4MaxFileSize {
 		return nil, nil, ErrHeader
@@ -100,7 +105,7 @@ func readSVR4Header(r io.Reader) (*Header, *RawHeader, error) {
 	}
 
 	// read link name
-	if hdr.Mode&^ModePerm == TypeSymlink {
+	if hdr.Mode&ModeType == TypeSymlink {
 		if hdr.Size < 1 || hdr.Size > svr4MaxNameSize {
 			return nil, nil, ErrHeader
 		}
@@ -134,6 +139,10 @@ func writeSVR4Header(w io.Writer, hdr *Header) (pad int64, err error) {
 		writeHex(hdrBuf[46:54], hdr.ModTime.Unix())
 	}
 	writeHex(hdrBuf[54:62], hdr.Size)
+	writeHex(hdrBuf[62:70], int64(hdr.DevMajor))
+	writeHex(hdrBuf[70:78], int64(hdr.DevMinor))
+	writeHex(hdrBuf[78:86], int64(hdr.RdevMajor))
+	writeHex(hdrBuf[86:94], int64(hdr.RdevMinor))
 	writeHex(hdrBuf[94:102], int64(len(hdr.Name)+1))
 	if hdr.Checksum != 0 {
 		writeHex(hdrBuf[102:110], int64(hdr.Checksum))

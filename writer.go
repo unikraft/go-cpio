@@ -87,7 +87,7 @@ func (w *Writer) WriteHeader(hdr *Header) (err error) {
 		}
 
 		// ensure file type is set
-		if hdr.Mode&^ModePerm == 0 {
+		if hdr.Mode&ModeType == 0 {
 			hdr.Mode |= TypeRegular
 		}
 

@@ -61,16 +61,16 @@ func (m FileMode) String() string {
 	return fmt.Sprintf("%#o", m)
 }
 
-// IsDir reports whether m describes a directory. That is, it tests for the
-// TypeDir bit being set in m.
+// IsDir reports whether m describes a directory. That is, it tests that the
+// type bits of m are TypeDir.
 func (m FileMode) IsDir() bool {
-	return m&TypeDir != 0
+	return m&ModeType == TypeDir
 }
 
-// IsRegular reports whether m describes a regular file. That is, it tests for
-// the TypeRegular bit being set in m.
+// IsRegular reports whether m describes a regular file. That is, it tests that
+// the type bits of m are TypeRegular.
 func (m FileMode) IsRegular() bool {
-	return m&^ModePerm == TypeRegular
+	return m&ModeType == TypeRegular
 }
 
 // Perm returns the Unix permission bits in m.
@@ -102,8 +102,31 @@ type Header struct {
 	DeviceID int
 	Inode    int64 // Inode number
 
+	DevMajor  int // Major number of the device that contains the file
+	DevMinor  int // Minor number of the device that contains the file
+	RdevMajor int // Major number of a character or block device node
+	RdevMinor int // Minor number of a character or block device node
+
 	pad int64 // bytes to pad before next header
 }
+
+// GetIno returns the inode number.
+func (h *Header) GetIno() uint64 { return uint64(h.Inode) }
+
+// GetNlink returns the number of hard links.
+func (h *Header) GetNlink() uint64 { return uint64(h.Links) }
+
+// GetUID returns the user ID of the owner.
+func (h *Header) GetUID() int { return h.Uid }
+
+// GetGID returns the group ID of the owner.
+func (h *Header) GetGID() int { return h.Guid }
+
+// GetDevMajor returns the major number of a device node.
+func (h *Header) GetDevMajor() uint32 { return uint32(h.RdevMajor) }
+
+// GetDevMinor returns the minor number of a device node.
+func (h *Header) GetDevMinor() uint32 { return uint32(h.RdevMinor) }
 
 // RawHeader exposes the unparsed header data.
 type RawHeader [110]byte
