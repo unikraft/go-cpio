@@ -7,4 +7,7 @@ Package cpio provides readers and writers for the CPIO archive file format.
 Currently, only the SVR4 (New ASCII) format is supported, both with and without
 checksums.
 
+Use `cpio.OpenFS` to read the files of an archive through the `io/fs`
+interfaces.
+
 Copyright 2021, Ryan Armstrong <ryan@cavaliercoder.com>

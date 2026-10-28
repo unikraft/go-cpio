@@ -71,7 +71,7 @@ func readSVR4Header(r io.Reader) (*Header, *RawHeader, error) {
 		RdevMajor: int(readHex(asc[78:86])),
 		RdevMinor: int(readHex(asc[86:94])),
 	}
-	if hdr.Size > svr4MaxFileSize {
+	if hdr.Size < 0 || hdr.Size > svr4MaxFileSize {
 		return nil, nil, ErrHeader
 	}
 	nameSize := readHex(asc[94:102])
