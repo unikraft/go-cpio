@@ -99,8 +99,14 @@ type Header struct {
 
 	Checksum uint32 // Computed checksum
 
+	// Deprecated: DeviceID is not read or written. Use DevMajor and DevMinor.
 	DeviceID int
 	Inode    int64 // Inode number
+
+	DevMajor  int // Major number of the device that contains the file
+	DevMinor  int // Minor number of the device that contains the file
+	RdevMajor int // Major number of a character or block device node
+	RdevMinor int // Minor number of a character or block device node
 
 	pad int64 // bytes to pad before next header
 }

@@ -6,6 +6,7 @@
 package cpio
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -60,6 +61,38 @@ func TestSVR4CRC(t *testing.T) {
 				t.Errorf("expected checksum %v, got %v for %v", hdr.Checksum, sum, hdr.Name)
 			}
 		}
+	}
+}
+
+func TestSVR4DeviceNumbers(t *testing.T) {
+	want := Header{
+		Name:      "dev/tty",
+		Mode:      TypeCharDevice | 0o620,
+		DevMajor:  0x08,
+		DevMinor:  0x21,
+		RdevMajor: 0x04,
+		RdevMinor: 0x1234,
+	}
+
+	var buf bytes.Buffer
+	w := NewWriter(&buf)
+	hdr := want
+	if err := w.WriteHeader(&hdr); err != nil {
+		t.Fatalf("WriteHeader: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	got, err := NewReader(&buf).Next()
+	if err != nil {
+		t.Fatalf("Next: %v", err)
+	}
+	if got.DevMajor != want.DevMajor || got.DevMinor != want.DevMinor ||
+		got.RdevMajor != want.RdevMajor || got.RdevMinor != want.RdevMinor {
+		t.Errorf("device numbers = %d:%d %d:%d, want %d:%d %d:%d",
+			got.DevMajor, got.DevMinor, got.RdevMajor, got.RdevMinor,
+			want.DevMajor, want.DevMinor, want.RdevMajor, want.RdevMinor)
 	}
 }
 
