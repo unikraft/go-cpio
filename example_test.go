@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"testing/fstest"
 
 	"github.com/unikraft/go-cpio"
 )
@@ -120,4 +121,47 @@ func ExampleOpenFS() {
 	// ---------- readme.txt
 	// ---------- todo.txt
 	// Get animal handling license.
+}
+
+func ExampleCreate() {
+	src := fstest.MapFS{
+		"bin":          {Mode: fs.ModeDir | 0o755},
+		"bin/ash":      {Mode: fs.ModeSymlink | 0o777, Data: []byte("sh")},
+		"bin/sh":       {Mode: 0o755, Data: []byte("#!/bin/sh\n")},
+		"etc":          {Mode: fs.ModeDir | 0o755},
+		"etc/hostname": {Mode: 0o644, Data: []byte("unikraft\n")},
+	}
+
+	// Write the files of src to an archive.
+	var buf bytes.Buffer
+	if err := cpio.Create(&buf, src); err != nil {
+		log.Fatalln(err)
+	}
+
+	// Read the archive back.
+	fsys, err := cpio.OpenFS(bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if err := fs.WalkDir(fsys, ".", func(name string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		fi, err := d.Info()
+		if err != nil {
+			return err
+		}
+		fmt.Println(fi.Mode(), name)
+		return nil
+	}); err != nil {
+		log.Fatalln(err)
+	}
+
+	// Output:
+	// drwxr-xr-x .
+	// drwxr-xr-x bin
+	// Lrwxrwxrwx bin/ash
+	// -rwxr-xr-x bin/sh
+	// drwxr-xr-x etc
+	// -rw-r--r-- etc/hostname
 }

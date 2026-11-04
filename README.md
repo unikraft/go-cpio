@@ -10,4 +10,7 @@ checksums.
 Use `cpio.OpenFS` to read the files of an archive through the `io/fs`
 interfaces.
 
+Use `cpio.Create` to write the files of an `fs.FS` to an archive. CPIO cannot
+keep extended attributes, thus `cpio.Create` does not write them.
+
 Copyright 2021, Ryan Armstrong <ryan@cavaliercoder.com>
