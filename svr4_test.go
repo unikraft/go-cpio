@@ -12,7 +12,9 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestRead(t *testing.T) {
@@ -152,6 +154,13 @@ func TestWriteHeaderRange(t *testing.T) {
 		{"size too large", Header{Name: "file", Size: 1 << 32}},
 		{"inode too large", Header{Name: "file", Inode: 1 << 32}},
 		{"negative device number", Header{Name: "file", RdevMinor: -1}},
+		{"time before 1970", Header{Name: "file", ModTime: time.Unix(-1, 0)}},
+		{"time after 2106", Header{Name: "file", ModTime: time.Unix(1<<32, 0)}},
+		{"name too long", Header{Name: strings.Repeat("a", 4096)}},
+		{"NUL byte in name", Header{Name: "a\x00b"}},
+		{"NUL byte in link target", Header{Name: "link", Mode: TypeSymlink, Size: 3, Linkname: "a\x00b"}},
+		{"empty symlink target", Header{Name: "link", Mode: TypeSymlink}},
+		{"symlink target too long", Header{Name: "link", Mode: TypeSymlink, Size: 4097}},
 	}
 
 	for _, tt := range tests {
