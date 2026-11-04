@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -120,8 +121,8 @@ func readSVR4Header(r io.Reader) (*Header, *RawHeader, error) {
 	return hdr, &savedBuf, nil
 }
 
-// checkSVR4Header returns ErrHeader if a number in hdr does not fit in its
-// field of an SVR4 header.
+// checkSVR4Header returns ErrHeader if a number or the time in hdr does not fit
+// in its field of an SVR4 header, or if the name or the link target is not valid.
 func checkSVR4Header(hdr *Header) error {
 	for _, v := range []int64{
 		hdr.Inode, int64(hdr.Uid), int64(hdr.Guid), int64(hdr.Links), hdr.Size,
@@ -130,6 +131,18 @@ func checkSVR4Header(hdr *Header) error {
 		if v < 0 || v > svr4MaxFileSize {
 			return ErrHeader
 		}
+	}
+	// The writer writes a zero time as 0.
+	if t := hdr.ModTime.Unix(); !hdr.ModTime.IsZero() && (t < 0 || t > svr4MaxFileSize) {
+		return ErrHeader
+	}
+	// The kernel reads names and link targets up to the first NUL byte.
+	if len(hdr.Name)+1 > svr4MaxNameSize || strings.ContainsRune(hdr.Name+hdr.Linkname, 0) {
+		return ErrHeader
+	}
+	// The data of a symbolic link is its target.
+	if hdr.Mode&ModeType == TypeSymlink && (hdr.Size < 1 || hdr.Size > svr4MaxNameSize) {
+		return ErrHeader
 	}
 	return nil
 }
