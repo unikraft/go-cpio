@@ -6,6 +6,8 @@
 package cpio
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -63,6 +65,38 @@ func TestSVR4CRC(t *testing.T) {
 	}
 }
 
+func TestSVR4DeviceNumbers(t *testing.T) {
+	want := Header{
+		Name:      "dev/tty",
+		Mode:      TypeCharDevice | 0o620,
+		DevMajor:  0x08,
+		DevMinor:  0x21,
+		RdevMajor: 0x04,
+		RdevMinor: 0x1234,
+	}
+
+	var buf bytes.Buffer
+	w := NewWriter(&buf)
+	hdr := want
+	if err := w.WriteHeader(&hdr); err != nil {
+		t.Fatalf("WriteHeader: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	got, err := NewReader(&buf).Next()
+	if err != nil {
+		t.Fatalf("Next: %v", err)
+	}
+	if got.DevMajor != want.DevMajor || got.DevMinor != want.DevMinor ||
+		got.RdevMajor != want.RdevMajor || got.RdevMinor != want.RdevMinor {
+		t.Errorf("device numbers = %d:%d %d:%d, want %d:%d %d:%d",
+			got.DevMajor, got.DevMinor, got.RdevMajor, got.RdevMinor,
+			want.DevMajor, want.DevMinor, want.RdevMajor, want.RdevMinor)
+	}
+}
+
 func ExampleNewHash() {
 	// Open the cpio archive for reading.
 	f, err := os.Open("testdata/test_svr4_crc.cpio")
@@ -108,4 +142,22 @@ func ExampleNewHash() {
 	// Checksum OK: gophers.txt (00000C98)
 	// Checksum OK: readme.txt (00000E3D)
 	// Checksum OK: todo.txt (00000A52)
+}
+
+func TestWriteHeaderRange(t *testing.T) {
+	tests := []struct {
+		desc string
+		hdr  Header
+	}{
+		{"size too large", Header{Name: "file", Size: 1 << 32}},
+		{"inode too large", Header{Name: "file", Inode: 1 << 32}},
+		{"negative device number", Header{Name: "file", RdevMinor: -1}},
+	}
+
+	for _, tt := range tests {
+		w := NewWriter(io.Discard)
+		if err := w.WriteHeader(&tt.hdr); !errors.Is(err, ErrHeader) {
+			t.Errorf("%s: WriteHeader error = %v, want %v", tt.desc, err, ErrHeader)
+		}
+	}
 }
