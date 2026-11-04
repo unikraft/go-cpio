@@ -163,43 +163,57 @@ func FileInfoHeader(fi os.FileInfo, link string) (*Header, error) {
 		return h, nil
 	}
 	fm := fi.Mode()
+	mode, err := fileMode(fm)
+	if err != nil {
+		return nil, err
+	}
 	h := &Header{
 		Name:    fi.Name(),
-		Mode:    FileMode(fi.Mode().Perm()), // or'd with Mode* constants later
+		Mode:    mode,
 		ModTime: fi.ModTime(),
 		Size:    fi.Size(),
 	}
 	switch {
-	case fm.IsRegular():
-		h.Mode |= TypeRegular
-	case fi.IsDir():
-		h.Mode |= TypeDir
+	case fm.IsDir():
 		h.Name += "/"
 		h.Size = 0
 	case fm&os.ModeSymlink != 0:
-		h.Mode |= TypeSymlink
 		h.Linkname = link
-	case fm&os.ModeDevice != 0:
-		if fm&os.ModeCharDevice != 0 {
-			h.Mode |= TypeCharDevice
-		} else {
-			h.Mode |= TypeDevice
-		}
-	case fm&os.ModeNamedPipe != 0:
-		h.Mode |= TypeNamedPipe
-	case fm&os.ModeSocket != 0:
-		h.Mode |= TypeSocket
-	default:
-		return nil, fmt.Errorf("cpio: unknown file mode %v", fm)
-	}
-	if fm&os.ModeSetuid != 0 {
-		h.Mode |= ModeSetuid
-	}
-	if fm&os.ModeSetgid != 0 {
-		h.Mode |= ModeSetgid
-	}
-	if fm&os.ModeSticky != 0 {
-		h.Mode |= ModeSticky
 	}
 	return h, nil
+}
+
+// fileMode returns the CPIO type, permission and special bits of fm.
+func fileMode(fm os.FileMode) (FileMode, error) {
+	m := FileMode(fm.Perm())
+	switch {
+	case fm.IsRegular():
+		m |= TypeRegular
+	case fm.IsDir():
+		m |= TypeDir
+	case fm&os.ModeSymlink != 0:
+		m |= TypeSymlink
+	case fm&os.ModeDevice != 0:
+		if fm&os.ModeCharDevice != 0 {
+			m |= TypeCharDevice
+		} else {
+			m |= TypeDevice
+		}
+	case fm&os.ModeNamedPipe != 0:
+		m |= TypeNamedPipe
+	case fm&os.ModeSocket != 0:
+		m |= TypeSocket
+	default:
+		return 0, fmt.Errorf("cpio: unknown file mode %v", fm)
+	}
+	if fm&os.ModeSetuid != 0 {
+		m |= ModeSetuid
+	}
+	if fm&os.ModeSetgid != 0 {
+		m |= ModeSetgid
+	}
+	if fm&os.ModeSticky != 0 {
+		m |= ModeSticky
+	}
+	return m, nil
 }
