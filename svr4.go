@@ -120,6 +120,20 @@ func readSVR4Header(r io.Reader) (*Header, *RawHeader, error) {
 	return hdr, &savedBuf, nil
 }
 
+// checkSVR4Header returns ErrHeader if a number in hdr does not fit in its
+// field of an SVR4 header.
+func checkSVR4Header(hdr *Header) error {
+	for _, v := range []int64{
+		hdr.Inode, int64(hdr.Uid), int64(hdr.Guid), int64(hdr.Links), hdr.Size,
+		int64(hdr.DevMajor), int64(hdr.DevMinor), int64(hdr.RdevMajor), int64(hdr.RdevMinor),
+	} {
+		if v < 0 || v > svr4MaxFileSize {
+			return ErrHeader
+		}
+	}
+	return nil
+}
+
 func writeSVR4Header(w io.Writer, hdr *Header) (pad int64, err error) {
 	var hdrBuf [110]byte
 	for i := 0; i < len(hdrBuf); i++ {

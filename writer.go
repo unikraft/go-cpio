@@ -78,6 +78,9 @@ func (w *Writer) WriteHeader(hdr *Header) (err error) {
 	if w.err != nil {
 		return w.err
 	}
+	if err := checkSVR4Header(hdr); err != nil {
+		return err
+	}
 	if hdr.Name != headerEOF {
 		// TODO: should we be mutating hdr here?
 		// ensure all inodes are unique

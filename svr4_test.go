@@ -7,6 +7,7 @@ package cpio
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -141,4 +142,22 @@ func ExampleNewHash() {
 	// Checksum OK: gophers.txt (00000C98)
 	// Checksum OK: readme.txt (00000E3D)
 	// Checksum OK: todo.txt (00000A52)
+}
+
+func TestWriteHeaderRange(t *testing.T) {
+	tests := []struct {
+		desc string
+		hdr  Header
+	}{
+		{"size too large", Header{Name: "file", Size: 1 << 32}},
+		{"inode too large", Header{Name: "file", Inode: 1 << 32}},
+		{"negative device number", Header{Name: "file", RdevMinor: -1}},
+	}
+
+	for _, tt := range tests {
+		w := NewWriter(io.Discard)
+		if err := w.WriteHeader(&tt.hdr); !errors.Is(err, ErrHeader) {
+			t.Errorf("%s: WriteHeader error = %v, want %v", tt.desc, err, ErrHeader)
+		}
+	}
 }
